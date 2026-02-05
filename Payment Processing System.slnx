@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="docker-compose.yml" />
+  </Folder>
+  <Project Path="FraudDetectionService/FraudDetectionService.csproj" Id="3ecad8bb-1b27-4df0-871a-13ff08d04d5a" />
+  <Project Path="NotificationService/NotificationService.csproj" Id="823c8832-6e0d-48ef-be25-cd075b51758c" />
+  <Project Path="Payment Processing System/Payment Processing System.csproj" />
+  <Project Path="PaymentService/PaymentService.csproj" Id="6123a58e-f3f2-4c12-9f50-77ccf310463e" />
+  <Project Path="PPS.Common/PPS.Common.csproj" Id="b451856a-6f13-47c1-a0bb-9ca39692c494" />
+</Solution>
