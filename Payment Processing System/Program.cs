@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Payment_Processing_System.Data;
-using Payment_Processing_System.DTOs.Payment;
+using PPS.Common;
 using Payment_Processing_System.Services;
 using Payment_Processing_System.Services.Kafka;
 using System.Text;
@@ -37,30 +37,41 @@ var kafkaConnect = builder.Configuration.GetConnectionString("kafkaConnect");
 
 builder.Services.AddMassTransit(x =>
 {
-    
-    x.UsingInMemory((context, cfg) => { });
-
-    x.AddConsumer<ConsumerMass>();
+    x.UsingInMemory((context, cfg) =>
+    {
+        cfg.ConfigureEndpoints(context);
+    });
 
     x.AddRider(rider =>
     {
-        rider.AddProducer<CreatePaymentRequest>("payment.created");
+        rider.AddProducer<Payment>("payment.created");
         rider.AddConsumer<ConsumerMass>();
 
         rider.UsingKafka((context, k) =>
         {
             k.Host(kafkaConnect);
 
-            k.TopicEndpoint<CreatePaymentRequest>(
+            k.TopicEndpoint<Payment>(
                 "payment.created",
                 "pps",
-                e => e.ConfigureConsumer<ConsumerMass>(context));
+                e =>
+                {
+                    e.CreateIfMissing(t =>
+                    {
+                        t.NumPartitions = 1;
+                        t.ReplicationFactor = 1;
+                    });
+                    e.ConfigureConsumer<ConsumerMass>(context);
+                });
         });
     });
 });
 
-// Hosted service автоматически запускает шину
-builder.Services.AddMassTransitHostedService();
+builder.Services.Configure<MassTransitHostOptions>(options =>
+{
+    options.WaitUntilStarted = true;
+    options.StartTimeout = TimeSpan.FromSeconds(30);
+});
 
 var connect = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

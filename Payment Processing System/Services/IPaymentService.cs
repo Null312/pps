@@ -1,5 +1,4 @@
 ﻿using MassTransit;
-using MassTransit.Testing;
 using Microsoft.EntityFrameworkCore;
 using Payment_Processing_System.Data;
 using Payment_Processing_System.DTOs.Payment;
@@ -17,9 +16,9 @@ namespace Payment_Processing_System.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IAccountService _accountService;
-        private readonly ITopicProducer<CreatePaymentRequest> _producer;
+        private readonly ITopicProducer<Payment> _producer;
 
-        public PaymentService(ApplicationDbContext context, IAccountService accountService, ITopicProducer<CreatePaymentRequest> producer)
+        public PaymentService(ApplicationDbContext context, IAccountService accountService, ITopicProducer<Payment> producer)
         {
             _context = context;
             _accountService = accountService;
@@ -47,7 +46,7 @@ namespace Payment_Processing_System.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            
+
             await _producer.Produce(payment);
 
             return new PaymentResponse

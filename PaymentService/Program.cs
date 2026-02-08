@@ -2,62 +2,61 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using PaymentService.Data;
 using PaymentService.Serivce.Kafka;
+using PPS.Common;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-// Add services to the container.
-var kafkaConnect = builder.Configuration.GetConnectionString("kafkaConnect");
+var kafkaConnect = builder.Configuration.GetConnectionString("KafkaConnect");
 
+Console.WriteLine($"=== Kafka Bootstrap Server: {kafkaConnect} ===");
+
+if (string.IsNullOrEmpty(kafkaConnect))
+{
+    throw new InvalidOperationException("KafkaConnect connection string is not configured!");
+}
 
 builder.Services.AddMassTransit(x =>
 {
-    // Регистрируем consumer
-    x.AddConsumer<PaymentCreatedConsumer>();
-
     x.UsingInMemory((context, cfg) =>
     {
-        // Можно оставить пустым или убрать, если не используете InMemory
+        cfg.ConfigureEndpoints(context);
     });
 
     x.AddRider(rider =>
     {
-        // Добавляем consumer для Kafka
         rider.AddConsumer<PaymentCreatedConsumer>();
-
-        // Если вам нужно также отправлять сообщения
-        rider.AddProducer<CreatePaymentRequest>("payment.created");
+        rider.AddProducer<Payment>("payment.processed");
 
         rider.UsingKafka((context, k) =>
         {
             k.Host(kafkaConnect);
 
-            // Настраиваем топик для чтения
-            k.TopicEndpoint<CreatePaymentRequest>(
-                "payment.created",      // имя топика
-                "pps-consumer-group",   // consumer group id (уникальный для вашего приложения)
+            k.TopicEndpoint<Payment>(
+                "payment.created",
+                "payment-service-group",
                 e =>
                 {
-                    // Настройка retry политики (опционально)
-                    e.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
-
-                    // Подключаем consumer
+                    e.CreateIfMissing(t =>
+                    {
+                        t.NumPartitions = 1;
+                        t.ReplicationFactor = 1;
+                    });
                     e.ConfigureConsumer<PaymentCreatedConsumer>(context);
                 });
         });
     });
 });
 
+builder.Services.Configure<MassTransitHostOptions>(options =>
+{
+    options.WaitUntilStarted = true;
+    options.StartTimeout = TimeSpan.FromSeconds(30);
+});
 
 var connect = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connect)
 );
-
-
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -66,6 +65,5 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.Migrate();
 }
-
 
 app.Run();

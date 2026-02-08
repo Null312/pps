@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(docker exec:*)",
+      "Bash(curl:*)",
+      "Bash(del \"D:\\\\ImportantDoc\\\\work\\\\hopeffer\\\\Project\\\\ppsNew\\\\PaymentService\\\\Serivce\\\\Kafka\\\\KafkaConsumerService.cs\")",
+      "Bash(del \"D:\\\\ImportantDoc\\\\work\\\\hopeffer\\\\Project\\\\ppsNew\\\\PaymentService\\\\Serivce\\\\Kafka\\\\RawJsonDeserializer.cs\")"
+    ]
+  }
+}

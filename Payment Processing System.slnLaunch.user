@@ -4,7 +4,8 @@
     "Projects": [
       {
         "Path": "Payment Processing System\\Payment Processing System.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": "IIS Express"
       },
       {
         "Path": "PaymentService\\PaymentService.csproj",
