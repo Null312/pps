@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using FraudDetectionService.DTOs;
+using MassTransit;
 using PPS.Common.KafkaDto;
 
 namespace FraudDetectionService.Service
@@ -6,17 +7,19 @@ namespace FraudDetectionService.Service
     public class FraudConsumer : IConsumer<BaseMessageKafka<ValidatedPaymentDto>>
     {
         private readonly ILogger<FraudConsumer> _logger;
-        
+        private readonly IRedisService _redis;
+
         private readonly ITopicProducer<BaseMessageKafka<FraudPaymentDto>> _producer;
 
         public FraudConsumer(
             ILogger<FraudConsumer> logger,
-           
-            ITopicProducer<BaseMessageKafka<FraudPaymentDto>> producer)
+
+            ITopicProducer<BaseMessageKafka<FraudPaymentDto>> producer, IRedisService redis)
         {
             _logger = logger;
-           
+
             _producer = producer;
+            _redis = redis;
         }
 
         public async Task Consume(ConsumeContext<BaseMessageKafka<ValidatedPaymentDto>> context)
@@ -30,14 +33,14 @@ namespace FraudDetectionService.Service
 
             try
             {
+                var user = await GetUserProfileAsync(message.Payload.From_user_id);
 
-                
 
 
                 var messageValidate = new BaseMessageKafka<ValidatedPaymentDto>
                 {
                     Event_id = $"evt_{Guid.NewGuid().ToString("N")[..8]}",
-                    Event_type = "payment.validated",
+                    Event_type = "payment.fraud-checked",
                     Timestamp = DateTime.Now,
                     Payload = new ValidatedPaymentDto
                     {
@@ -55,6 +58,12 @@ namespace FraudDetectionService.Service
 
                 await _producer.Produce(messageValidate);
 
+                user.account_age_days++;
+
+                user.last_updated=DateTime.Now;
+
+                await UpdateUserProfileAsync(user);
+
                 _logger.LogInformation(
                     "Платеж успешно обработан и отправлен в payment.processed. TransactionId: {TransactionId}",
                     message.Payload.Payment_id);
@@ -67,6 +76,32 @@ namespace FraudDetectionService.Service
 
                 throw; // MassTransit повторит обработку согласно политике retry
             }
+        }
+
+        public async Task<UserProfileDto?> GetUserProfileAsync(string userId)
+        {
+            var cacheKey = $"user_profile:{userId}";
+
+            // Пытаемся получить из кеша
+            var cachedProfile = await _redis.GetAsync<UserProfileDto>(cacheKey);
+            if (cachedProfile != null)
+            {
+                return cachedProfile;
+            }
+
+            UserProfileDto profile = new UserProfileDto() { User_id = userId };
+
+            // Сохраняем в кеш на 1 час
+            await _redis.SetAsync(cacheKey, profile, TimeSpan.FromHours(1));
+
+            return profile;
+        }
+
+        public async Task UpdateUserProfileAsync(UserProfileDto profile)
+        {
+            // Обновляем кеш
+            var cacheKey = $"user_profile:{profile.User_id}";
+            await _redis.SetAsync(cacheKey, profile, TimeSpan.FromHours(1));
         }
     }
 }

@@ -12,6 +12,7 @@ using FraudDetectionService.Service;
 using MassTransit;
 
 using PPS.Common.KafkaDto;
+using StackExchange.Redis;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -57,6 +58,16 @@ builder.Services.AddMassTransit(x =>
         });
     });
 });
+
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = ConfigurationOptions.Parse(
+        builder.Configuration["Redis:ConnectionString"]!);
+    return ConnectionMultiplexer.Connect(configuration);
+});
+
+builder.Services.AddSingleton<IRedisService, RedisService>();
 
 builder.Services.Configure<MassTransitHostOptions>(options =>
 {
