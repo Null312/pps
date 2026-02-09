@@ -14,6 +14,8 @@ namespace PaymentService.DTOs
         [Column(TypeName = "decimal(18,2)")]
         public decimal Balance { get; set; } = 0;
 
+        public string AccountNumber { get; set; } = Guid.NewGuid().ToString("N").Substring(0, 12).ToUpper();
+
         [Required]
         [MaxLength(3)]
         public string Currency { get; set; } = "USD";

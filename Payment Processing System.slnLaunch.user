@@ -10,6 +10,10 @@
       {
         "Path": "PaymentService\\PaymentService.csproj",
         "Action": "Start"
+      },
+      {
+        "Path": "FraudDetectionService\\FraudDetectionService.csproj",
+        "Action": "Start"
       }
     ]
   }

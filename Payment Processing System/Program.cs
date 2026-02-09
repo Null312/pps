@@ -9,6 +9,7 @@ using PPS.Common;
 using Payment_Processing_System.Services;
 using Payment_Processing_System.Services.Kafka;
 using System.Text;
+using PPS.Common.KafkaDto;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,14 +45,14 @@ builder.Services.AddMassTransit(x =>
 
     x.AddRider(rider =>
     {
-        rider.AddProducer<Payment>("payment.created");
+        rider.AddProducer<BaseMessageKafka<PaymentDto>>("payment.created");
         rider.AddConsumer<ConsumerMass>();
 
         rider.UsingKafka((context, k) =>
         {
             k.Host(kafkaConnect);
 
-            k.TopicEndpoint<Payment>(
+            k.TopicEndpoint<BaseMessageKafka<PaymentDto>>(
                 "payment.created",
                 "pps",
                 e =>

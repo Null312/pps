@@ -1,5 +1,4 @@
 ﻿using PaymentService.DTOs;
-using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 
 namespace PaymentService.Data
@@ -63,6 +62,55 @@ namespace PaymentService.Data
                     .HasForeignKey(t => t.ToAccountId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
+
+
+            var userId = new Guid("{A6A7EF54-B3D2-4FC8-BC84-004D65A168D8}");
+            var accountId = new Guid("{C765D7D5-E62C-4AC6-859D-85C9A803CB42}");
+
+            modelBuilder.Entity<User>().HasData(new User
+            {
+                Id = userId,
+                Email = "test1@test.com",
+                CreatedAt = new DateTime(2025, 2, 10, 0, 0, 0, DateTimeKind.Utc)
+            });
+
+
+
+
+            var userId2 = new Guid("{A6A7EF54-B3D2-4FC8-BC84-004D65A168D6}");
+            var accountId2 = new Guid("{C765D7D5-E62C-4AC6-859D-85C9A803CB41}");
+
+            modelBuilder.Entity<User>().HasData(new User
+            {
+                Id = userId2,
+                Email = "test2@test.com",
+                CreatedAt = new DateTime(2025, 2, 10, 0, 0, 0, DateTimeKind.Utc)
+            });
+
+
+            modelBuilder.Entity<Account>().HasData(new Account
+            {
+                Id = accountId2,
+                UserId = userId2,
+                AccountNumber = "a2",
+                Currency = "USD",
+                Balance = 1000,
+                DailyLimit = 5000,
+
+                CreatedAt = new DateTime(2025, 2, 10, 0, 0, 0, DateTimeKind.Utc)
+            });
+
+            modelBuilder.Entity<Account>().HasData(new Account
+            {
+                Id = accountId,
+                UserId = userId,
+                AccountNumber = "a1",
+                Currency = "USD",
+                Balance = 10000,
+                DailyLimit = 5000,
+                CreatedAt = new DateTime(2025, 2, 10, 0, 0, 0, DateTimeKind.Utc)
+            });
+
         }
     }
 }

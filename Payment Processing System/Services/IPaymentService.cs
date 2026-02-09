@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Payment_Processing_System.Data;
 using Payment_Processing_System.DTOs.Payment;
 using PPS.Common;
+using PPS.Common.KafkaDto;
 
 namespace Payment_Processing_System.Services
 {
@@ -16,9 +17,9 @@ namespace Payment_Processing_System.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IAccountService _accountService;
-        private readonly ITopicProducer<Payment> _producer;
+        private readonly ITopicProducer<BaseMessageKafka<PaymentDto>> _producer;
 
-        public PaymentService(ApplicationDbContext context, IAccountService accountService, ITopicProducer<Payment> producer)
+        public PaymentService(ApplicationDbContext context, IAccountService accountService, ITopicProducer<BaseMessageKafka<PaymentDto>> producer)
         {
             _context = context;
             _accountService = accountService;
@@ -34,16 +35,22 @@ namespace Payment_Processing_System.Services
             if (request.Amount<1)
                 throw new InvalidOperationException("Insufficient funds");
 
-            var payment = new Payment
+            var payment = new BaseMessageKafka<PaymentDto>
             {
-                PaymentId = $"pay_{Guid.NewGuid().ToString("N")[..8]}",
-                FromAccountId = request.FromAccountId,
-                ToAccountId = request.ToAccountId,
-                Amount = request.Amount,
-                Currency = request.Currency,
-                Description = request.Description,
-                Status = "PROCESSING",
-                CreatedAt = DateTime.UtcNow
+                Event_id= $"evt_{Guid.NewGuid().ToString("N")[..8]}",
+                Event_type= "payment.created",
+                Timestamp=DateTime.Now,
+                Payload = new PaymentDto
+                {
+                    Payment_id = $"pay_{Guid.NewGuid().ToString("N")[..8]}",
+                    From_account_id = request.FromAccountId,
+                    To_account_id = request.ToAccountId,
+                    Amount = request.Amount,
+                    Currency = request.Currency,
+                    Description = request.Description,
+                    //Status = "PROCESSING",
+                    //CreatedAt = DateTime.UtcNow
+                }
             };
 
 
@@ -51,9 +58,9 @@ namespace Payment_Processing_System.Services
 
             return new PaymentResponse
             {
-                PaymentId = payment.PaymentId,
-                Status = payment.Status,
-                CreatedAt = payment.CreatedAt
+                PaymentId = payment.Payload.Payment_id,
+                Status = "payment.Payload.Status",
+                CreatedAt = DateTime.UtcNow
             };
         }
 
@@ -73,9 +80,9 @@ namespace Payment_Processing_System.Services
                 Amount = payment.Amount,
                 Currency = payment.Currency,
                 Description = payment.Description,
-                Status = payment.Status,
-                CreatedAt = payment.CreatedAt,
-                CompletedAt = payment.CompletedAt
+                //Status = payment.Status,
+                //CreatedAt = payment.CreatedAt,
+                //CompletedAt = payment.CompletedAt
             };
 
         }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PaymentService.Data;
@@ -11,9 +12,11 @@ using PaymentService.Data;
 namespace PaymentService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260208064437_AddedColumnAccountNumber")]
+    partial class AddedColumnAccountNumber
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -61,30 +64,6 @@ namespace PaymentService.Migrations
                         .HasDatabaseName("idx_accounts_user_id");
 
                     b.ToTable("accounts", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("c765d7d5-e62c-4ac6-859d-85c9a803cb41"),
-                            AccountNumber = "a2",
-                            Balance = 1000m,
-                            CreatedAt = new DateTime(2025, 2, 10, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Currency = "USD",
-                            DailyLimit = 5000m,
-                            IsBlocked = false,
-                            UserId = new Guid("a6a7ef54-b3d2-4fc8-bc84-004d65a168d6")
-                        },
-                        new
-                        {
-                            Id = new Guid("c765d7d5-e62c-4ac6-859d-85c9a803cb42"),
-                            AccountNumber = "a1",
-                            Balance = 10000m,
-                            CreatedAt = new DateTime(2025, 2, 10, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Currency = "USD",
-                            DailyLimit = 5000m,
-                            IsBlocked = false,
-                            UserId = new Guid("a6a7ef54-b3d2-4fc8-bc84-004d65a168d8")
-                        });
                 });
 
             modelBuilder.Entity("PaymentService.DTOs.PaymentTransaction", b =>
@@ -179,20 +158,6 @@ namespace PaymentService.Migrations
                         .IsUnique();
 
                     b.ToTable("users", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("a6a7ef54-b3d2-4fc8-bc84-004d65a168d8"),
-                            CreatedAt = new DateTime(2025, 2, 10, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "test1@test.com"
-                        },
-                        new
-                        {
-                            Id = new Guid("a6a7ef54-b3d2-4fc8-bc84-004d65a168d6"),
-                            CreatedAt = new DateTime(2025, 2, 10, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "test2@test.com"
-                        });
                 });
 
             modelBuilder.Entity("PaymentService.DTOs.Account", b =>

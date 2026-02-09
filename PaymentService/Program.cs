@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PaymentService.Data;
 using PaymentService.Serivce.Kafka;
 using PPS.Common;
+using PPS.Common.KafkaDto;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -25,13 +26,16 @@ builder.Services.AddMassTransit(x =>
     x.AddRider(rider =>
     {
         rider.AddConsumer<PaymentCreatedConsumer>();
-        rider.AddProducer<Payment>("payment.processed");
+        rider.AddProducer<BaseMessageKafka<ValidatedPaymentDto>>("payment.validated");
+        rider.AddProducer<BaseMessageKafka<FailedPaymentDto>>("payment.failed");
+
+        //rider.AddProducer<Payment>("payment.completed");
 
         rider.UsingKafka((context, k) =>
         {
             k.Host(kafkaConnect);
 
-            k.TopicEndpoint<Payment>(
+            k.TopicEndpoint<BaseMessageKafka<PaymentDto>>(
                 "payment.created",
                 "payment-service-group",
                 e =>
