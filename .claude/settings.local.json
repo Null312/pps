@@ -5,7 +5,8 @@
       "Bash(docker exec:*)",
       "Bash(curl:*)",
       "Bash(del \"D:\\\\ImportantDoc\\\\work\\\\hopeffer\\\\Project\\\\ppsNew\\\\PaymentService\\\\Serivce\\\\Kafka\\\\KafkaConsumerService.cs\")",
-      "Bash(del \"D:\\\\ImportantDoc\\\\work\\\\hopeffer\\\\Project\\\\ppsNew\\\\PaymentService\\\\Serivce\\\\Kafka\\\\RawJsonDeserializer.cs\")"
+      "Bash(del \"D:\\\\ImportantDoc\\\\work\\\\hopeffer\\\\Project\\\\ppsNew\\\\PaymentService\\\\Serivce\\\\Kafka\\\\RawJsonDeserializer.cs\")",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

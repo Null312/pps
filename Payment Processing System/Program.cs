@@ -1,3 +1,4 @@
+using Confluent.Kafka;
 using MassTransit;
 using MassTransit.Testing;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -33,8 +34,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 
-var kafkaConnect = builder.Configuration.GetConnectionString("kafkaConnect");
-
+var kafkaConnect = builder.Configuration.GetConnectionString("KafkaConnect");
+var kafkaPass = builder.Configuration.GetConnectionString("KafkaPass");
 
 builder.Services.AddMassTransit(x =>
 {
@@ -50,18 +51,22 @@ builder.Services.AddMassTransit(x =>
 
         rider.UsingKafka((context, k) =>
         {
-            k.Host(kafkaConnect);
+            k.Host(kafkaConnect, h =>
+            {
+                h.UseSasl(s =>
+                {
+                    s.SecurityProtocol = SecurityProtocol.SaslSsl;
+                    s.Mechanism = SaslMechanism.Plain;
+                    s.Username = "$ConnectionString";
+                    s.Password = kafkaPass;
+                });
+            });
 
             k.TopicEndpoint<BaseMessageKafka<PaymentDto>>(
                 "payment.created",
                 "pps",
                 e =>
                 {
-                    e.CreateIfMissing(t =>
-                    {
-                        t.NumPartitions = 1;
-                        t.ReplicationFactor = 1;
-                    });
                     e.ConfigureConsumer<ConsumerMass>(context);
                 });
         });

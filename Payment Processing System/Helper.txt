@@ -1,0 +1,13 @@
+﻿#вход по логину паролю
+az login --use-device-code
+
+#зайти в репозиторий
+az acr login --name learnContainer
+
+docker build --no-cache -f "Payment Processing System/Dockerfile" -t payment .
+
+docker images
+
+docker tag payment:latest learncontainer.azurecr.io/payment:1.0.7
+
+docker push learncontainer.azurecr.io/payment:1.0.7
