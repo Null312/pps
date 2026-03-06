@@ -6,8 +6,10 @@ az acr login --name learnContainer
 
 docker build --no-cache -f "Payment Processing System/Dockerfile" -t payment .
 
+#docker run -d -p 8080:8080 payment
+
 docker images
 
-docker tag payment:latest learncontainer.azurecr.io/payment:1.0.7
+docker tag payment:latest learncontainer.azurecr.io/payment:1.0.17
 
-docker push learncontainer.azurecr.io/payment:1.0.7
+docker push learncontainer.azurecr.io/payment:1.0.17

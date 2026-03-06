@@ -37,41 +37,45 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 var kafkaConnect = builder.Configuration.GetConnectionString("KafkaConnect");
 var kafkaPass = builder.Configuration.GetConnectionString("KafkaPass");
 
-builder.Services.AddMassTransit(x =>
-{
-    x.UsingInMemory((context, cfg) =>
-    {
-        cfg.ConfigureEndpoints(context);
-    });
+var logger = LoggerFactory.Create(b => b.AddConsole()).CreateLogger("Startup");
+logger.LogInformation("KafkaConnect: {Connect}", string.IsNullOrEmpty(kafkaConnect) ? "NOT SET" : kafkaConnect);
+logger.LogInformation("KafkaPass: {Pass}", string.IsNullOrEmpty(kafkaPass) ? "NOT SET" : "SET");
 
-    x.AddRider(rider =>
-    {
-        rider.AddProducer<BaseMessageKafka<PaymentDto>>("payment.created");
-        rider.AddConsumer<ConsumerMass>();
+//builder.Services.AddMassTransit(x =>
+//{
+//    x.UsingInMemory((context, cfg) =>
+//    {
+//        cfg.ConfigureEndpoints(context);
+//    });
 
-        rider.UsingKafka((context, k) =>
-        {
-            k.Host(kafkaConnect, h =>
-            {
-                h.UseSasl(s =>
-                {
-                    s.SecurityProtocol = SecurityProtocol.SaslSsl;
-                    s.Mechanism = SaslMechanism.Plain;
-                    s.Username = "$ConnectionString";
-                    s.Password = kafkaPass;
-                });
-            });
+//    x.AddRider(rider =>
+//    {
+//        rider.AddProducer<BaseMessageKafka<PaymentDto>>("payment.created");
+//        rider.AddConsumer<ConsumerMass>();
 
-            k.TopicEndpoint<BaseMessageKafka<PaymentDto>>(
-                "payment.created",
-                "pps",
-                e =>
-                {
-                    e.ConfigureConsumer<ConsumerMass>(context);
-                });
-        });
-    });
-});
+//        rider.UsingKafka((context, k) =>
+//        {
+//            k.Host(kafkaConnect, h =>
+//            {
+//                h.UseSasl(s =>
+//                {
+//                    s.SecurityProtocol = SecurityProtocol.SaslSsl;
+//                    s.Mechanism = SaslMechanism.Plain;
+//                    s.Username = "$ConnectionString";
+//                    s.Password = kafkaPass;
+//                });
+//            });
+
+//            k.TopicEndpoint<BaseMessageKafka<PaymentDto>>(
+//                "payment.created",
+//                "pps",
+//                e =>
+//                {
+//                    e.ConfigureConsumer<ConsumerMass>(context);
+//                });
+//        });
+//    });
+//});
 
 builder.Services.Configure<MassTransitHostOptions>(options =>
 {
@@ -79,17 +83,17 @@ builder.Services.Configure<MassTransitHostOptions>(options =>
     options.StartTimeout = TimeSpan.FromSeconds(30);
 });
 
-var connect = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-options.UseNpgsql(connect)
-);
+//var connect = builder.Configuration.GetConnectionString("DefaultConnection");
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//options.UseNpgsql(connect)
+//);
 
 
 
 // ИЗМЕНИТЕ регистрацию сервисов с Singleton на Scoped:
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IAccountService, AccountService>();
+//builder.Services.AddScoped<IAuthService, AuthService>();
+//builder.Services.AddScoped<IPaymentService, PaymentService>();
+//builder.Services.AddScoped<IAccountService, AccountService>();
 
 builder.Services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
@@ -132,25 +136,27 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+//    db.Database.Migrate();
+//}
 
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Payment API v1");
     });
-}
+//}
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHealthChecks("/health");
 app.MapControllers();
 app.Run();
